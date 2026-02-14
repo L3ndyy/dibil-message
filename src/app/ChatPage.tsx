@@ -55,7 +55,6 @@ export function ChatPage() {
         setActiveChat(chat.id)
         setSearchOpen(false)
         setSearchQuery('')
-        setSearchResults([])
       } else {
         setSearchError('Не удалось начать чат. Проверьте подключение и попробуйте снова.')
       }
