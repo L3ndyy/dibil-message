@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Menu } from 'lucide-react'
+import { Menu, MessageCirclePlus } from 'lucide-react'
 import { ChatList } from '@/components/chat/ChatList'
 import { ChatHeader } from '@/components/chat/ChatHeader'
 import { ChatView } from '@/components/chat/ChatView'
 import { ProfilePanel } from '@/components/profile/ProfilePanel'
 import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
+import { useUIStore } from '@/store/uiStore'
 import { useChats } from '@/hooks/useChats'
 import { useMessages } from '@/hooks/useMessages'
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages'
@@ -28,6 +29,7 @@ export function Layout() {
   } = useChatStore()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [infoOpen, setInfoOpen] = useState(false)
+  const setNewChatDialogOpen = useUIStore((s) => s.setNewChatDialogOpen)
 
   useChats()
   useMessages(activeChatId)
@@ -74,6 +76,17 @@ export function Layout() {
             </Button>
             <span className="font-semibold text-[var(--color-dibil-text)]">Dibil</span>
           </div>
+        </div>
+        <div className="border-b border-[var(--color-dibil-border)] p-2">
+          <Button
+            variant="primary"
+            size="sm"
+            className="w-full gap-2"
+            onClick={() => setNewChatDialogOpen(true)}
+          >
+            <MessageCirclePlus className="h-4 w-4 shrink-0" />
+            Создать беседу
+          </Button>
         </div>
         <div className="flex-1 overflow-hidden">
           <ChatList

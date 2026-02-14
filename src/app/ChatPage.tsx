@@ -1,22 +1,22 @@
 import { useState } from 'react'
-import { Search, UserPlus } from 'lucide-react'
+import { Search, UserPlus, MessageCirclePlus } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
+import { useUIStore } from '@/store/uiStore'
 import { supabase } from '@/lib/supabase'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Avatar } from '@/components/ui/Avatar'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
 import { searchUsers, createDirectChat } from '@/lib/api'
+import { cn } from '@/lib/utils'
 import { Layout } from './Layout'
 import type { Profile } from '@/types'
 
 export function ChatPage() {
   const { profile } = useAuthStore()
   const { setActiveChat, addOrUpdateChat } = useChatStore()
-  const navigate = useNavigate()
-  const [searchOpen, setSearchOpen] = useState(false)
+  const { newChatDialogOpen: searchOpen, setNewChatDialogOpen: setSearchOpen } = useUIStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Profile[]>([])
   const [searching, setSearching] = useState(false)
@@ -25,10 +25,17 @@ export function ChatPage() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
+    setSearchError(null)
     setSearching(true)
-    const users = await searchUsers(searchQuery.trim())
-    setSearchResults(users.filter((u) => u.id !== profile?.id))
-    setSearching(false)
+    try {
+      const users = await searchUsers(searchQuery.trim())
+      setSearchResults(users)
+    } catch {
+      setSearchError('Ошибка поиска. Попробуйте снова.')
+      setSearchResults([])
+    } finally {
+      setSearching(false)
+    }
   }
 
   const handleStartChat = async (user: Profile) => {
@@ -54,8 +61,15 @@ export function ChatPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    useAuthStore.getState().signOut()
-    navigate('/')
+    await useAuthStore.getState().signOut()
+    window.location.href = `${window.location.origin}/dibil-message/`
+  }
+
+  const openNewChat = () => {
+    setSearchError(null)
+    setSearchQuery('')
+    setSearchResults([])
+    setSearchOpen(true)
   }
 
   return (
@@ -64,7 +78,11 @@ export function ChatPage() {
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-dibil-border)] bg-[var(--color-dibil-panel)] px-4 md:px-6">
           <span className="font-semibold text-[var(--color-dibil-text)]">Dibil</span>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setSearchOpen(true)}>
+            <Button variant="primary" size="sm" onClick={openNewChat} className="gap-1.5">
+              <MessageCirclePlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Создать беседу</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={openNewChat} aria-label="Поиск">
               <Search className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -99,18 +117,17 @@ export function ChatPage() {
               <p className="text-sm text-[var(--color-dibil-text-muted)]">Пользователи не найдены.</p>
             )}
             {searchResults.map((user) => {
+              const isMe = user.id === profile?.id
               const isAdding = addingUserId === user.id
               return (
-                <button
+                <div
                   key={user.id}
-                  type="button"
-                  disabled={!!addingUserId}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    handleStartChat(user)
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left hover:bg-[var(--color-dibil-surface)] disabled:cursor-wait disabled:opacity-70"
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl p-3',
+                    isMe
+                      ? 'bg-[var(--color-dibil-surface)]/50'
+                      : 'hover:bg-[var(--color-dibil-surface)]'
+                  )}
                 >
                   <Avatar
                     src={user.avatar_url}
@@ -120,19 +137,35 @@ export function ChatPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-[var(--color-dibil-text)]">
                       {user.full_name ?? user.username ?? 'Без имени'}
+                      {isMe && (
+                        <span className="ml-2 text-xs font-normal text-[var(--color-dibil-text-muted)]">(это вы)</span>
+                      )}
                     </p>
                     {user.username && (
                       <p className="truncate text-sm text-[var(--color-dibil-text-muted)]">@{user.username}</p>
                     )}
                   </div>
-                  <span className="shrink-0">
-                    {isAdding ? (
-                      <span className="text-sm text-[var(--color-dibil-text-muted)]">Добавление...</span>
-                    ) : (
-                      <UserPlus className="h-5 w-5 text-[var(--color-dibil-primary)]" />
-                    )}
-                  </span>
-                </button>
+                  {isMe ? (
+                    <span className="shrink-0 text-sm text-[var(--color-dibil-text-muted)]">Нельзя начать чат с собой</span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!!addingUserId}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleStartChat(user)
+                      }}
+                      className="shrink-0 rounded-lg p-2 hover:bg-[var(--color-dibil-border)] disabled:opacity-70"
+                    >
+                      {isAdding ? (
+                        <span className="text-sm text-[var(--color-dibil-text-muted)]">Добавление...</span>
+                      ) : (
+                        <UserPlus className="h-5 w-5 text-[var(--color-dibil-primary)]" />
+                      )}
+                    </button>
+                  )}
+                </div>
               )
             })}
           </div>
