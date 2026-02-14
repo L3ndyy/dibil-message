@@ -1,66 +1,278 @@
-# Dibil — Modern Web Messenger
+# Dibil — современный веб-мессенджер
 
-A Telegram-like web messenger built with React, Supabase, and Tailwind. Dark theme, realtime chat, file and voice messages, PWA-ready.
+Веб-мессенджер в духе Telegram: тёмная тема, чаты в реальном времени, отправка файлов и голосовых сообщений, адаптивный интерфейс и возможность установки как PWA.
 
-## Stack
+---
 
-- **Frontend:** Vite, React 18, TypeScript, Tailwind CSS, Framer Motion, Zustand, React Router
-- **Backend:** Supabase (Auth, Postgres, Realtime, Storage)
+## Возможности
 
-## Setup
+- **Регистрация и вход** — email/пароль и вход через Google (OAuth)
+- **Поиск пользователей** — по имени и username для начала диалога
+- **Приватные чаты** — диалоги один на один с историей сообщений
+- **Сообщения** — текст, ответы на сообщения (reply), превью вложений
+- **Файлы** — загрузка изображений, видео, аудио и документов с отображением превью
+- **Голосовые сообщения** — запись через микрофон и отправка в чат
+- **Realtime** — новые сообщения приходят без перезагрузки (Supabase Realtime)
+- **Статус «печатает»** — индикатор набора текста в текущем чате
+- **Профили** — аватар, имя, статус, «был в сети» в боковой панели чата
+- **Адаптив** — удобно на телефоне, планшете и ПК
+- **PWA** — можно установить на устройство как приложение
 
-### 1. Supabase
+---
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run the contents of `supabase/schema.sql` to create tables and RLS.
-3. In **Storage**, create a bucket named `uploads` and set it to **Public** (or add RLS policies for read/write).
-4. In **Authentication > Providers**, enable Email and Google.
-5. Copy **Project URL** and **anon public** key to env.
+## Технологии
 
-### 2. Env
+| Часть | Стек |
+|--------|--------|
+| Сборка | Vite 7 |
+| Фронтенд | React 18, TypeScript |
+| Стили | Tailwind CSS 4 |
+| UI-компоненты | Radix UI (Avatar, Dialog, ScrollArea и др.) |
+| Анимации | Framer Motion |
+| Состояние | Zustand |
+| Маршрутизация | React Router 7 |
+| Бэкенд | Supabase (Auth, PostgreSQL, Realtime, Storage) |
+
+---
+
+## Быстрый старт
+
+### Требования
+
+- Node.js 18+ и npm
+- Аккаунт [Supabase](https://supabase.com)
+
+### 1. Клонирование и установка зависимостей
+
+```bash
+git clone <url-репозитория> dibil
+cd dibil
+npm install
+```
+
+### 2. Настройка Supabase
+
+#### Создание проекта
+
+1. Зайдите на [supabase.com](https://supabase.com) и создайте новый проект (или откройте существующий).
+2. Дождитесь окончания создания проекта.
+
+#### Таблицы и права доступа
+
+1. В панели Supabase откройте **SQL Editor**.
+2. Скопируйте весь код из файла **`supabase/schema.sql`** в редактор.
+3. Нажмите **Run** — будут созданы таблицы `profiles`, `chats`, `chat_members`, `messages`, `file_uploads` и др., включён RLS и триггеры.
+
+#### Хранилище файлов
+
+1. Перейдите в **Storage**.
+2. Нажмите **New bucket**.
+3. Имя bucket: **`uploads`**.
+4. Включите **Public bucket**, чтобы файлы (картинки, видео и т.д.) были доступны по ссылке.
+5. Сохраните.
+
+При необходимости можно не делать bucket публичным и настроить RLS-политики для чтения/записи — тогда нужно будет обновить логику в приложении под эти политики.
+
+#### Аутентификация
+
+1. Откройте **Authentication** → **Providers**.
+2. **Email** — включён по умолчанию, при желании настройте подтверждение по почте.
+3. **Google** — чтобы пользователи могли входить через аккаунт Google:
+   - Откройте [Google Cloud Console](https://console.cloud.google.com/).
+   - Создайте проект или выберите существующий (сверху страницы).
+   - В меню слева: **APIs & Services** → **Credentials**.
+   - Нажмите **Create Credentials** → **OAuth client ID**.
+   - Если попросит — настройте **OAuth consent screen**: выберите **External**, укажите название приложения (например, «Dibil») и email поддержки, сохраните.
+   - Тип приложения: **Web application**.
+   - Имя: любое (например, «Dibil web»).
+   - **Authorized redirect URIs** — сюда нужно добавить **callback Supabase**, а не адрес вашего сайта. Supabase показывает его в настройках Google-провайдера. Обычно он такой:
+     ```
+     https://ВАШ-PROJECT-ID.supabase.co/auth/v1/callback
+     ```
+     Подставьте вместо `ВАШ-PROJECT-ID` ID вашего проекта из Supabase (есть в URL панели: `app.supabase.com/project/ЭТОТ-ID`). Добавьте эту строку в список и нажмите **Create**.
+   - Скопируйте **Client ID** и **Client Secret** и вставьте их в Supabase: **Authentication** → **Providers** → **Google** → поля **Client ID** и **Client Secret**, сохраните.
+4. **Redirect URLs в Supabase** — это адреса, на которые Supabase может отправить пользователя после входа (в т.ч. после OAuth). Их нужно указать в Supabase, чтобы не было ошибки «redirect URL not allowed».
+   - В Supabase откройте **Authentication** → **URL Configuration**.
+   - В блоке **Redirect URLs** добавьте по одному URL на строку, например:
+     - для локальной разработки: `http://localhost:5173/dibil/` (или тот порт, на котором у вас крутится Vite);
+     - для продакшена: `https://ВАШ_ЛОГИН.github.io/dibil/` (замените `ВАШ_ЛОГИН` на ваш логин GitHub; если репозиторий называется иначе — подставьте его имя вместо `dibil`).
+   - Можно добавить оба варианта сразу. Сохраните настройки.
+   - Важно: после входа через Google пользователь попадёт на ваш сайт (например, на `/dibil/` или `/dibil/chat`), поэтому этот базовый URL сайта и должен быть в списке Redirect URLs в Supabase.
+
+#### Ключи проекта (URL и API-ключ)
+
+Эти два значения нужны, чтобы приложение могло подключаться к вашему проекту Supabase: обращаться к базе, авторизовывать пользователей и загружать файлы. Их вы подставите в файл `.env` (см. следующий раздел).
+
+**Где их взять в Supabase:**
+
+1. Откройте настройки проекта (иконка шестерёнки внизу слева или **Project Settings**). В меню слева выберите **API** или **API Keys** — в зависимости от версии дашборда вы можете попасть сразу на страницу с ключами.
+
+2. **Project URL на странице «API Keys» не показывается.** Его можно взять так:
+   - Зайдите в **Project Settings** → **General**. Там часто указан **Reference ID** (или похожее поле) и иногда сам **Project URL**. Или:
+   - **Соберите URL из адреса браузера.** Когда вы в дашборде Supabase, в адресной строке есть ссылка вида  
+     `https://supabase.com/dashboard/project/XXXXXXXXXXXX/settings/...`  
+     Часть **XXXXXXXXXXXX** (например, `xlpkqaogmtpqtsixrlac`) — это ID вашего проекта. Тогда **Project URL** будет таким:  
+     `https://xlpkqaogmtpqtsixrlac.supabase.co`  
+     Подставьте свой ID вместо `XXXXXXXXXXXX` и используйте эту ссылку как `VITE_SUPABASE_URL`.
+
+3. **API-ключи** на странице **API Keys** отображаются так:
+   - **Publishable key** (ключ вида `sb_publishable_...`) — помечен как «safe to use in a browser» / «can be safely shared publicly». Это тот ключ, который нужен для фронтенда. Скопируйте его — это значение для **`VITE_SUPABASE_ANON_KEY`** (в старом интерфейсе он назывался anon public).
+   - **Secret keys** (ключ вида `sb_secret_...`) — для сервера и привилегированного доступа. Его **нельзя** использовать в коде, который выполняется в браузере. В `.env` для этого приложения его не добавляйте.
+
+4. Вставьте в `.env` **Project URL** (п. 2) и **Publishable key** (п. 3). Secret key не используйте.
+
+### 3. Переменные окружения
+
+В корне проекта создайте файл **`.env`** (можно скопировать из примера):
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in:
+Откройте `.env` и заполните:
 
-- `VITE_SUPABASE_URL` — Supabase project URL  
-- `VITE_SUPABASE_ANON_KEY` — Supabase anon key  
+```env
+VITE_SUPABASE_URL=https://ваш-проект.supabase.co
+VITE_SUPABASE_ANON_KEY=ваш-anon-ключ
+```
 
-### 3. Run locally
+- `VITE_SUPABASE_URL` — полный URL проекта из Supabase (Project URL).
+- `VITE_SUPABASE_ANON_KEY` — ключ **anon public** из раздела API.
+
+Файл `.env` не должен попадать в git (он уже в `.gitignore`).
+
+### 4. Запуск в режиме разработки
 
 ```bash
-npm install
 npm run dev
 ```
 
-Open [http://localhost:5173/dibil/](http://localhost:5173/dibil/) (or root if you change `base` in `vite.config.ts`).
+В браузере откройте: [http://localhost:5173/dibil/](http://localhost:5173/dibil/)
 
-### 4. Deploy on GitHub Pages
+Если измените `base` в `vite.config.ts` (например, на `'/'`), приложение будет доступно по корню: `http://localhost:5173/`.
 
-1. In repo **Settings > Pages**, set source to **GitHub Actions**.
-2. Add secrets: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
-3. Push to `main`; the workflow will build and deploy.
+---
 
-App will be available at `https://<username>.github.io/dibil/`.
+## Деплой на GitHub Pages
 
-## Scripts
+### Подготовка репозитория
 
-- `npm run dev` — dev server  
-- `npm run build` — production build  
-- `npm run preview` — preview production build  
+1. Создайте репозиторий на GitHub (например, `dibil`).
+2. Подключите его как `origin` и запушьте код:
+   ```bash
+   git remote add origin https://github.com/ВАШ_ЛОГИН/dibil.git
+   git push -u origin main
+   ```
 
-## Project structure
+### Секреты репозитория
 
-- `src/app` — pages and layout  
-- `src/components` — UI and chat components  
-- `src/hooks` — auth, realtime, messages, typing  
-- `src/lib` — Supabase client, api, utils  
-- `src/store` — Zustand stores  
-- `src/types` — shared types  
-- `supabase/schema.sql` — DB schema and RLS  
+1. В репозитории откройте **Settings** → **Secrets and variables** → **Actions**.
+2. Добавьте секреты:
+   - **`VITE_SUPABASE_URL`** — ваш Project URL из Supabase.
+   - **`VITE_SUPABASE_ANON_KEY`** — ваш anon public ключ.
 
-## License
+Их использует workflow при сборке, чтобы подставить переменные в билд.
+
+### Включение GitHub Pages
+
+1. **Settings** → **Pages**.
+2. В блоке **Build and deployment** выберите **Source**: **GitHub Actions**.
+3. Сохраните.
+
+### Автоматический деплой
+
+При каждом **push в ветку `main`** workflow из `.github/workflows/deploy.yml`:
+
+- ставит зависимости;
+- собирает проект (`npm run build`) с подстановкой секретов;
+- публикует результат в GitHub Pages.
+
+Готовое приложение будет доступно по адресу:
+
+**`https://ВАШ_ЛОГИН.github.io/dibil/`**
+
+(замените `ВАШ_ЛОГИН` на ваш логин GitHub и при необходимости `dibil` на имя репозитория).
+
+---
+
+## Скрипты npm
+
+| Команда | Описание |
+|--------|----------|
+| `npm run dev` | Запуск dev-сервера (Vite) |
+| `npm run build` | Сборка для продакшена |
+| `npm run preview` | Локальный просмотр собранной версии |
+
+---
+
+## Структура проекта
+
+```
+dibil/
+├── .github/workflows/
+│   └── deploy.yml          # Сборка и деплой на GitHub Pages
+├── public/
+│   ├── favicon.svg         # Иконка
+│   └── manifest.json       # Манифест PWA
+├── src/
+│   ├── app/                # Страницы и общий layout
+│   │   ├── AuthPage.tsx    # Вход / регистрация
+│   │   ├── ChatPage.tsx    # Главная страница с чатами и поиском
+│   │   └── Layout.tsx       # Список чатов + область чата + панель профиля
+│   ├── components/
+│   │   ├── chat/           # Компоненты чата
+│   │   │   ├── ChatList.tsx
+│   │   │   ├── ChatHeader.tsx
+│   │   │   ├── ChatView.tsx
+│   │   │   ├── MessageBubble.tsx
+│   │   │   └── MessageInput.tsx
+│   │   ├── profile/
+│   │   │   └── ProfilePanel.tsx
+│   │   └── ui/             # Кнопки, инпуты, аватар, диалоги и т.д.
+│   ├── hooks/              # Хуки для auth, realtime, сообщений, «печатает»
+│   ├── lib/                # Supabase-клиент, API-функции, утилиты
+│   ├── store/              # Zustand: authStore, chatStore
+│   ├── types/              # Общие типы и описание БД
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css           # Глобальные стили и Tailwind
+├── supabase/
+│   └── schema.sql          # Схема БД и RLS (выполнить в Supabase вручную)
+├── .env.example            # Пример переменных окружения
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+- **`src/app`** — страницы (авторизация, чаты) и общий layout с сайдбаром и областью чата.
+- **`src/components`** — переиспользуемые компоненты: список чатов, шапка чата, сообщения, ввод, профиль, кнопки, инпуты и т.д.
+- **`src/hooks`** — логика авторизации, подписки на сообщения и статус «печатает», загрузка списка чатов и сообщений.
+- **`src/lib`** — создание клиента Supabase, функции для чатов/сообщений/поиска и хелперы (форматирование времени, типы файлов).
+- **`src/store`** — глобальное состояние: пользователь, профиль, список чатов, сообщения по чатам, индикаторы набора текста.
+- **`supabase/schema.sql`** — один файл со всей схемой: таблицы, индексы, RLS, триггеры, включение Realtime для таблицы сообщений.
+
+---
+
+## Возможные проблемы
+
+**После деплоя на GitHub Pages приложение не подключается к Supabase**
+
+- Проверьте, что в настройках репозитория заданы секреты `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`.
+- В Supabase в **Authentication** → **URL Configuration** добавлен ваш продакшен-URL (например, `https://ВАШ_ЛОГИН.github.io/dibil/`) в разрешённые redirect URLs.
+
+**Ошибки при загрузке файлов**
+
+- Убедитесь, что в Storage создан bucket **`uploads`** и при необходимости открыт для публичного чтения (или настроены RLS).
+- Проверьте лимиты бесплатного плана Supabase на размер и количество файлов.
+
+**Google-вход не срабатывает**
+
+- В Google Cloud Console для OAuth-клиента добавлен правильный redirect URI (тот, что указывает Supabase в настройках провайдера).
+- В Supabase в Redirect URLs указан тот же адрес, что и у приложения (с учётом `/dibil/` в пути).
+
+---
+
+## Лицензия
 
 MIT
