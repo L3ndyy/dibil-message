@@ -59,10 +59,12 @@ export function ChatPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    await useAuthStore.getState().signOut()
-    window.location.href = `${window.location.origin}/dibil-message/`
+  const handleSignOut = () => {
+    const base = `${window.location.origin}/dibil-message/`
+    supabase.auth.signOut().finally(() => {
+      useAuthStore.getState().signOut()
+      window.location.replace(base)
+    })
   }
 
   const openNewChat = () => {
@@ -85,7 +87,7 @@ export function ChatPage() {
             <Button variant="ghost" size="sm" onClick={openNewChat} aria-label="Поиск">
               <Search className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <Button type="button" variant="ghost" size="sm" onClick={handleSignOut}>
               <span className="text-sm">Выйти</span>
             </Button>
           </div>

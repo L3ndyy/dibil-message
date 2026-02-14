@@ -106,10 +106,14 @@ export async function sendMessage(
 }
 
 export async function searchUsers(query: string): Promise<Profile[]> {
-  const { data } = await supabase
+  const term = query.trim()
+  if (!term) return []
+  const { data, error } = await supabase.rpc('search_profiles', { search_term: term })
+  if (!error && data) return data as Profile[]
+  const { data: fallback } = await supabase
     .from('profiles')
     .select('*')
-    .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+    .or(`full_name.ilike.%${term}%,username.ilike.%${term}%`)
     .limit(20)
-  return (data ?? []) as Profile[]
+  return (fallback ?? []) as Profile[]
 }

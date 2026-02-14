@@ -213,3 +213,19 @@ $$ language plpgsql;
 create or replace trigger on_message_created
   after insert on public.messages
   for each row execute function public.update_chat_updated_at();
+
+-- Поиск пользователей по имени и username (для клиента, без проблем с кодированием % в URL)
+create or replace function public.search_profiles(search_term text)
+returns setof public.profiles
+language sql
+security invoker
+stable
+as $$
+  select * from public.profiles
+  where search_term is not null and length(trim(search_term)) > 0
+    and (
+      full_name ilike '%' || replace(trim(search_term), '''', '''''') || '%'
+      or username ilike '%' || replace(trim(search_term), '''', '''''') || '%'
+    )
+  limit 20;
+$$;
