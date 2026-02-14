@@ -105,15 +105,7 @@ export async function sendMessage(
   return msg as Message
 }
 
-export async function searchUsers(query: string): Promise<Profile[]> {
-  const term = query.trim()
-  if (!term) return []
-  const { data, error } = await supabase.rpc('search_profiles', { search_term: term })
-  if (!error && data) return data as Profile[]
-  const { data: fallback } = await supabase
-    .from('profiles')
-    .select('*')
-    .or(`full_name.ilike.%${term}%,username.ilike.%${term}%`)
-    .limit(20)
-  return (fallback ?? []) as Profile[]
+export async function getAllProfiles(): Promise<Profile[]> {
+  const { data } = await supabase.from('profiles').select('*').order('full_name').limit(500)
+  return (data ?? []) as Profile[]
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, UserPlus, MessageCirclePlus } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Avatar } from '@/components/ui/Avatar'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
-import { searchUsers, createDirectChat } from '@/lib/api'
+import { getAllProfiles, createDirectChat } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Layout } from './Layout'
 import type { Profile } from '@/types'
@@ -18,25 +18,32 @@ export function ChatPage() {
   const { setActiveChat, addOrUpdateChat } = useChatStore()
   const { newChatDialogOpen: searchOpen, setNewChatDialogOpen: setSearchOpen } = useUIStore()
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Profile[]>([])
-  const [searching, setSearching] = useState(false)
+  const [allUsers, setAllUsers] = useState<Profile[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
   const [addingUserId, setAddingUserId] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return
+  useEffect(() => {
+    if (!searchOpen) return
     setSearchError(null)
-    setSearching(true)
-    try {
-      const users = await searchUsers(searchQuery.trim())
-      setSearchResults(users)
-    } catch {
-      setSearchError('Ошибка поиска. Попробуйте снова.')
-      setSearchResults([])
-    } finally {
-      setSearching(false)
-    }
-  }
+    setLoadingUsers(true)
+    getAllProfiles()
+      .then(setAllUsers)
+      .catch(() => {
+        setSearchError('Не удалось загрузить список пользователей.')
+        setAllUsers([])
+      })
+      .finally(() => setLoadingUsers(false))
+  }, [searchOpen])
+
+  const query = searchQuery.trim().toLowerCase()
+  const searchResults = query
+    ? allUsers.filter(
+        (u) =>
+          (u.full_name?.toLowerCase().includes(query) ?? false) ||
+          (u.username?.toLowerCase().includes(query) ?? false)
+      )
+    : allUsers
 
   const handleStartChat = async (user: Profile) => {
     setSearchError(null)
@@ -61,16 +68,16 @@ export function ChatPage() {
 
   const handleSignOut = () => {
     const base = `${window.location.origin}/dibil-message/`
-    supabase.auth.signOut().finally(() => {
-      useAuthStore.getState().signOut()
+    useAuthStore.getState().signOut()
+    supabase.auth.signOut()
+    setTimeout(() => {
       window.location.replace(base)
-    })
+    }, 0)
   }
 
-  const openNewChat = () => {
+  const const openNewChat = () => {
     setSearchError(null)
     setSearchQuery('')
-    setSearchResults([])
     setSearchOpen(true)
   }
 
@@ -87,9 +94,16 @@ export function ChatPage() {
             <Button variant="ghost" size="sm" onClick={openNewChat} aria-label="Поиск">
               <Search className="h-5 w-5" />
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={handleSignOut}>
-              <span className="text-sm">Выйти</span>
-            </Button>
+            <a
+              href={`${window.location.origin}/dibil-message/`}
+              onClick={(e) => {
+                e.preventDefault()
+                handleSignOut()
+              }}
+              className="inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--color-dibil-text)] hover:bg-[var(--color-dibil-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-dibil-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-dibil-bg)]"
+            >
+              Выйти
+            </a>
           </div>
         </header>
         <main className="flex-1 overflow-hidden">
@@ -100,23 +114,25 @@ export function ChatPage() {
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
         <DialogContent className="max-h-[80vh] overflow-hidden flex flex-col">
           <DialogTitle>Найти пользователя</DialogTitle>
-          <div className="flex gap-2">
+          <p className="text-sm text-[var(--color-dibil-text-muted)]">
+            Список всех пользователей. Введите имя или @username для фильтра.
+          </p>
+          <div className="mt-2">
             <Input
-              placeholder="Имя или имя пользователя..."
+              placeholder="Фильтр по имени или @username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <Button onClick={handleSearch} disabled={searching}>
-              Найти
-            </Button>
           </div>
           <div className="mt-4 flex-1 overflow-auto">
             {searchError && (
               <p className="mb-2 text-sm text-red-400">{searchError}</p>
             )}
-            {searchResults.length === 0 && searchQuery && !searching && (
-              <p className="text-sm text-[var(--color-dibil-text-muted)]">Пользователи не найдены.</p>
+            {loadingUsers && (
+              <p className="text-sm text-[var(--color-dibil-text-muted)]">Загрузка...</p>
+            )}
+            {!loadingUsers && searchResults.length === 0 && (
+              <p className="text-sm text-[var(--color-dibil-text-muted)]">Нет пользователей.</p>
             )}
             {searchResults.map((user) => {
               const isMe = user.id === profile?.id
