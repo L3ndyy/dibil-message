@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
-  base: '/dibil/',
+  base: '/dibil-message/',
   build: {
     outDir: 'dist',
     sourcemap: false,
