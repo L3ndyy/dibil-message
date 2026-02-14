@@ -20,6 +20,8 @@ export function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Profile[]>([])
   const [searching, setSearching] = useState(false)
+  const [addingUserId, setAddingUserId] = useState<string | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -30,13 +32,23 @@ export function ChatPage() {
   }
 
   const handleStartChat = async (user: Profile) => {
-    const chat = await createDirectChat(user.id)
-    if (chat) {
-      addOrUpdateChat({ ...chat, other_member: user })
-      setActiveChat(chat.id)
-      setSearchOpen(false)
-      setSearchQuery('')
-      setSearchResults([])
+    setSearchError(null)
+    setAddingUserId(user.id)
+    try {
+      const chat = await createDirectChat(user.id)
+      if (chat) {
+        addOrUpdateChat({ ...chat, other_member: user })
+        setActiveChat(chat.id)
+        setSearchOpen(false)
+        setSearchQuery('')
+        setSearchResults([])
+      } else {
+        setSearchError('Не удалось начать чат. Проверьте подключение и попробуйте снова.')
+      }
+    } catch {
+      setSearchError('Не удалось начать чат. Попробуйте снова.')
+    } finally {
+      setAddingUserId(null)
     }
   }
 
@@ -80,32 +92,49 @@ export function ChatPage() {
             </Button>
           </div>
           <div className="mt-4 flex-1 overflow-auto">
+            {searchError && (
+              <p className="mb-2 text-sm text-red-400">{searchError}</p>
+            )}
             {searchResults.length === 0 && searchQuery && !searching && (
               <p className="text-sm text-[var(--color-dibil-text-muted)]">Пользователи не найдены.</p>
             )}
-            {searchResults.map((user) => (
-              <button
-                key={user.id}
-                type="button"
-                onClick={() => handleStartChat(user)}
-                className="flex w-full items-center gap-3 rounded-xl p-3 text-left hover:bg-[var(--color-dibil-surface)]"
-              >
-                <Avatar
-                  src={user.avatar_url}
-                  fallback={user.full_name ?? user.username ?? ''}
-                  size="md"
-                />
-                <div>
-                  <p className="font-medium text-[var(--color-dibil-text)]">
-                    {user.full_name ?? user.username ?? 'Без имени'}
-                  </p>
-                  {user.username && (
-                    <p className="text-sm text-[var(--color-dibil-text-muted)]">@{user.username}</p>
-                  )}
-                </div>
-                <UserPlus className="ml-auto h-5 w-5 text-[var(--color-dibil-primary)]" />
-              </button>
-            ))}
+            {searchResults.map((user) => {
+              const isAdding = addingUserId === user.id
+              return (
+                <button
+                  key={user.id}
+                  type="button"
+                  disabled={!!addingUserId}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleStartChat(user)
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left hover:bg-[var(--color-dibil-surface)] disabled:cursor-wait disabled:opacity-70"
+                >
+                  <Avatar
+                    src={user.avatar_url}
+                    fallback={user.full_name ?? user.username ?? ''}
+                    size="md"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-[var(--color-dibil-text)]">
+                      {user.full_name ?? user.username ?? 'Без имени'}
+                    </p>
+                    {user.username && (
+                      <p className="truncate text-sm text-[var(--color-dibil-text-muted)]">@{user.username}</p>
+                    )}
+                  </div>
+                  <span className="shrink-0">
+                    {isAdding ? (
+                      <span className="text-sm text-[var(--color-dibil-text-muted)]">Добавление...</span>
+                    ) : (
+                      <UserPlus className="h-5 w-5 text-[var(--color-dibil-primary)]" />
+                    )}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </DialogContent>
       </Dialog>

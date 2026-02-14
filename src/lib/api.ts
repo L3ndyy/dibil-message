@@ -35,10 +35,19 @@ export async function createDirectChat(otherUserId: string): Promise<Chat | null
   if (chatErr || !newChat) return null
 
   const newChatId = (newChat as { id: string }).id
-  await supabase.from('chat_members').insert([
-    { chat_id: newChatId, user_id: user.id, role: 'owner' },
-    { chat_id: newChatId, user_id: otherUserId, role: 'member' },
-  ] as never)
+  const { error: err1 } = await supabase.from('chat_members').insert({
+    chat_id: newChatId,
+    user_id: user.id,
+    role: 'owner',
+  } as never)
+  if (err1) return null
+
+  const { error: err2 } = await supabase.from('chat_members').insert({
+    chat_id: newChatId,
+    user_id: otherUserId,
+    role: 'member',
+  } as never)
+  if (err2) return null
 
   return newChat as Chat
 }
