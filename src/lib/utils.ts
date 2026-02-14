@@ -8,11 +8,11 @@ export function formatMessageTime(date: string | Date): string {
   const d = new Date(date)
   const now = new Date()
   const diff = now.getTime() - d.getTime()
-  if (diff < 60000) return 'now'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m`
-  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  if (diff < 86400000 * 7) return d.toLocaleDateString([], { weekday: 'short' })
-  return d.toLocaleDateString([], { day: 'numeric', month: 'short' })
+  if (diff < 60000) return 'сейчас'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} мин`
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  if (diff < 86400000 * 7) return d.toLocaleDateString('ru-RU', { weekday: 'short' })
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
 export function getFilePreviewType(mime: string | null): 'image' | 'video' | 'audio' | 'doc' {

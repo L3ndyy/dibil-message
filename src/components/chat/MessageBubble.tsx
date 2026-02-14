@@ -54,7 +54,7 @@ export function MessageBubble({ message, isOwn, showAvatar }: MessageBubbleProps
       >
         {!isOwn && message.sender && (
           <p className="mb-0.5 text-xs font-medium text-[var(--color-dibil-accent)]">
-            {message.sender.full_name ?? message.sender.username ?? 'User'}
+            {message.sender.full_name ?? message.sender.username ?? 'Пользователь'}
           </p>
         )}
 
@@ -66,14 +66,14 @@ export function MessageBubble({ message, isOwn, showAvatar }: MessageBubbleProps
             )}
           >
             <p className="font-medium">
-              {message.reply_to.sender?.full_name ?? message.reply_to.sender?.username ?? 'User'}
+              {message.reply_to.sender?.full_name ?? message.reply_to.sender?.username ?? 'Пользователь'}
             </p>
-            <p className="truncate text-xs">{message.reply_to.content ?? 'Attachment'}</p>
+            <p className="truncate text-xs">{message.reply_to.content ?? 'Вложение'}</p>
           </div>
         )}
 
         {isDeleted ? (
-          <p className="italic opacity-70">Message deleted</p>
+          <p className="italic opacity-70">Сообщение удалено</p>
         ) : (
           <>
             {files.length > 0 && (
@@ -122,7 +122,7 @@ export function MessageBubble({ message, isOwn, showAvatar }: MessageBubbleProps
             isOwn ? 'text-white/90' : 'text-[var(--color-dibil-text-muted)]'
           )}
         >
-          {message.is_edited && <span>edited</span>}
+          {message.is_edited && <span>изменено</span>}
           <time>{format(new Date(message.created_at), 'HH:mm')}</time>
           {isOwn && <CheckCheck className="h-3 w-3" />}
         </div>

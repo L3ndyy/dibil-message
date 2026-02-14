@@ -33,7 +33,7 @@ export function ChatView({
     <div className="flex h-full flex-col bg-[var(--color-dibil-bg)]">
       {typingUserIds.length > 0 && (
         <div className="shrink-0 border-b border-[var(--color-dibil-border)] bg-[var(--color-dibil-panel)] px-4 py-1 text-sm italic text-[var(--color-dibil-text-muted)]">
-          typing...
+          печатает...
         </div>
       )}
       <ScrollArea className="flex-1 overflow-y-auto px-4 py-4">
@@ -56,7 +56,7 @@ export function ChatView({
         <MessageInput
           onSend={onSendMessage}
           onTyping={onTyping}
-          placeholder="Write a message..."
+          placeholder="Написать сообщение..."
         />
       )}
     </div>

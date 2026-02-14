@@ -29,13 +29,13 @@ export function AuthPage() {
           options: { data: { full_name: fullName } },
         })
         if (err) throw err
-        setSuccess('Check your email to confirm your account.')
+        setSuccess('Проверьте почту: на неё отправлена ссылка для подтверждения.')
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password })
         if (err) throw err
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : 'Что-то пошло не так')
     } finally {
       setLoading(false)
     }
@@ -60,7 +60,7 @@ export function AuthPage() {
         </div>
         <h1 className="mb-1 text-center text-2xl font-bold text-[var(--color-dibil-text)]">Dibil</h1>
         <p className="mb-6 text-center text-sm text-[var(--color-dibil-text-muted)]">
-          {mode === 'login' ? 'Sign in to continue' : 'Create your account'}
+          {mode === 'login' ? 'Войдите, чтобы продолжить' : 'Создайте аккаунт'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -68,7 +68,7 @@ export function AuthPage() {
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-dibil-text-muted)]" />
               <Input
-                placeholder="Full name"
+                placeholder="Имя"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="pl-9"
@@ -80,7 +80,7 @@ export function AuthPage() {
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-dibil-text-muted)]" />
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="Электронная почта"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-9"
@@ -91,7 +91,7 @@ export function AuthPage() {
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-dibil-text-muted)]" />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Пароль"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-9"
@@ -102,28 +102,28 @@ export function AuthPage() {
           {error && <p className="text-sm text-red-400">{error}</p>}
           {success && <p className="text-sm text-green-400">{success}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Sign up'}
+            {loading ? 'Подождите...' : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
           </Button>
         </form>
 
         <div className="my-4 flex items-center gap-2">
           <div className="h-px flex-1 bg-[var(--color-dibil-border)]" />
-          <span className="text-xs text-[var(--color-dibil-text-muted)]">or</span>
+          <span className="text-xs text-[var(--color-dibil-text-muted)]">или</span>
           <div className="h-px flex-1 bg-[var(--color-dibil-border)]" />
         </div>
 
         <Button type="button" variant="secondary" className="w-full" onClick={handleGoogle}>
-          Continue with Google
+          Войти через Google
         </Button>
 
         <p className="mt-6 text-center text-sm text-[var(--color-dibil-text-muted)]">
-          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+          {mode === 'login' ? 'Нет аккаунта? ' : 'Уже есть аккаунт? '}
           <button
             type="button"
             className="text-[var(--color-dibil-primary)] hover:underline"
             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
           >
-            {mode === 'login' ? 'Sign up' : 'Sign in'}
+            {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
           </button>
         </p>
       </motion.div>

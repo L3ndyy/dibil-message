@@ -11,7 +11,7 @@ interface MessageInputProps {
   placeholder?: string
 }
 
-export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Message' }: MessageInputProps) {
+export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Сообщение' }: MessageInputProps) {
   const [text, setText] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -58,7 +58,7 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Messag
         type="button"
         onClick={() => fileRef.current?.click()}
         className="shrink-0 rounded-full p-2 text-[var(--color-dibil-text-muted)] hover:bg-[var(--color-dibil-surface)] hover:text-[var(--color-dibil-text)]"
-        aria-label="Attach file"
+        aria-label="Прикрепить файл"
       >
         <Paperclip className="h-5 w-5" />
       </button>
@@ -75,10 +75,10 @@ export function MessageInput({ onSend, onTyping, disabled, placeholder = 'Messag
       />
       {recording ? (
         <Button type="button" size="md" variant="danger" className="shrink-0 rounded-full p-2" onClick={stopVoice}>
-          Stop
+          Стоп
         </Button>
       ) : (
-        <Button type="button" size="md" variant="ghost" className="shrink-0 rounded-full p-2" onClick={startVoice} aria-label="Voice message">
+        <Button type="button" size="md" variant="ghost" className="shrink-0 rounded-full p-2" onClick={startVoice} aria-label="Голосовое сообщение">
           <Mic className="h-5 w-5" />
         </Button>
       )}

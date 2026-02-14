@@ -56,7 +56,7 @@ export function ChatPage() {
               <Search className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <span className="text-sm">Log out</span>
+              <span className="text-sm">Выйти</span>
             </Button>
           </div>
         </header>
@@ -67,21 +67,21 @@ export function ChatPage() {
 
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
         <DialogContent className="max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogTitle>Find user</DialogTitle>
+          <DialogTitle>Найти пользователя</DialogTitle>
           <div className="flex gap-2">
             <Input
-              placeholder="Username or name..."
+              placeholder="Имя или имя пользователя..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
             <Button onClick={handleSearch} disabled={searching}>
-              Search
+              Найти
             </Button>
           </div>
           <div className="mt-4 flex-1 overflow-auto">
             {searchResults.length === 0 && searchQuery && !searching && (
-              <p className="text-sm text-[var(--color-dibil-text-muted)]">No users found.</p>
+              <p className="text-sm text-[var(--color-dibil-text-muted)]">Пользователи не найдены.</p>
             )}
             {searchResults.map((user) => (
               <button
@@ -97,7 +97,7 @@ export function ChatPage() {
                 />
                 <div>
                   <p className="font-medium text-[var(--color-dibil-text)]">
-                    {user.full_name ?? user.username ?? 'Unknown'}
+                    {user.full_name ?? user.username ?? 'Без имени'}
                   </p>
                   {user.username && (
                     <p className="text-sm text-[var(--color-dibil-text-muted)]">@{user.username}</p>

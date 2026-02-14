@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/ScrollArea'
 import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -16,7 +17,7 @@ interface ProfilePanelProps {
 export function ProfilePanel({ profile, onClose, className }: ProfilePanelProps) {
   if (!profile) return null
 
-  const name = profile.full_name ?? profile.username ?? 'Unknown'
+  const name = profile.full_name ?? profile.username ?? 'Без имени'
   const bio = profile.bio ?? profile.status ?? ''
 
   return (
@@ -27,7 +28,7 @@ export function ProfilePanel({ profile, onClose, className }: ProfilePanelProps)
       className={cn('flex shrink-0 flex-col border-l border-[var(--color-dibil-border)] bg-[var(--color-dibil-panel)]', className)}
     >
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-dibil-border)] px-4">
-        <span className="font-medium">Profile</span>
+        <span className="font-medium">Профиль</span>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-5 w-5" />
         </Button>
@@ -42,9 +43,9 @@ export function ProfilePanel({ profile, onClose, className }: ProfilePanelProps)
           {bio && <p className="mt-2 text-sm text-[var(--color-dibil-text-muted)]">{bio}</p>}
           <div className="mt-4 flex flex-col gap-2 text-left text-sm text-[var(--color-dibil-text-muted)]">
             {profile.is_online ? (
-              <span className="text-green-500">Online</span>
+              <span className="text-green-500">В сети</span>
             ) : profile.last_seen ? (
-              <span>Last seen {format(new Date(profile.last_seen), 'PPp')}</span>
+              <span>Был(а) в сети {format(new Date(profile.last_seen), 'PPp', { locale: ru })}</span>
             ) : null}
           </div>
         </div>

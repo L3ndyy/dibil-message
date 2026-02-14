@@ -1,7 +1,7 @@
 {
   "name": "Dibil",
   "short_name": "Dibil",
-  "description": "Modern messenger",
+  "description": "Современный веб-мессенджер",
   "start_url": "/dibil-message/",
   "display": "standalone",
   "background_color": "#0e0e10",

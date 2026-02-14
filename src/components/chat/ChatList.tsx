@@ -31,7 +31,7 @@ export function ChatList({ chats, activeId, onSelect }: ChatListProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-dibil-text-muted)]" />
           <Input
-            placeholder="Search chats..."
+            placeholder="Поиск чатов..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -45,12 +45,12 @@ export function ChatList({ chats, activeId, onSelect }: ChatListProps) {
               const isActive = chat.id === activeId
               const name =
                 chat.type === 'direct'
-                  ? chat.other_member?.full_name || chat.other_member?.username || 'Unknown'
-                  : chat.title ?? 'Chat'
+                  ? chat.other_member?.full_name || chat.other_member?.username || 'Без имени'
+                  : chat.title ?? 'Чат'
               const avatar =
                 chat.type === 'direct' ? chat.other_member?.avatar_url : chat.avatar_url
               const last = chat.last_message
-              const lastText = last?.is_deleted ? 'Message deleted' : last?.content?.slice(0, 40) ?? 'No messages yet'
+              const lastText = last?.is_deleted ? 'Сообщение удалено' : last?.content?.slice(0, 40) ?? 'Пока нет сообщений'
               return (
                 <motion.button
                   key={chat.id}
