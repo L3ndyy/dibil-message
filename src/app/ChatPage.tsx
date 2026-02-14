@@ -75,7 +75,7 @@ export function ChatPage() {
     }, 0)
   }
 
-  const const openNewChat = () => {
+  const openNewChat = () => {
     setSearchError(null)
     setSearchQuery('')
     setSearchOpen(true)
