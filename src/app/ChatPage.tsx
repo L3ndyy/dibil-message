@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, UserPlus, MessageCirclePlus } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
@@ -7,13 +8,14 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Avatar } from '@/components/ui/Avatar'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
 import { getAllProfiles, createDirectChat } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Layout } from './Layout'
 import type { Profile } from '@/types'
 
 export function ChatPage() {
+  const navigate = useNavigate()
   const { profile } = useAuthStore()
   const { setActiveChat, addOrUpdateChat } = useChatStore()
   const { newChatDialogOpen: searchOpen, setNewChatDialogOpen: setSearchOpen } = useUIStore()
@@ -65,13 +67,17 @@ export function ChatPage() {
     }
   }
 
-  const handleSignOut = () => {
+  const [signingOut, setSigningOut] = useState(false)
+  const handleSignOut = async () => {
+    if (signingOut) return
+    setSigningOut(true)
     const base = `${window.location.origin}/dibil-message/`
-    useAuthStore.getState().signOut()
-    supabase.auth.signOut()
-    setTimeout(() => {
+    try {
+      await supabase.auth.signOut()
+      useAuthStore.getState().signOut()
+    } finally {
       window.location.replace(base)
-    }, 0)
+    }
   }
 
   const openNewChat = () => {
@@ -86,6 +92,9 @@ export function ChatPage() {
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--color-dibil-border)] bg-[var(--color-dibil-panel)] px-4 md:px-6">
           <span className="font-semibold text-[var(--color-dibil-text)]">Dibil</span>
           <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => navigate('/profile')} title="Мой профиль">
+              <Avatar src={profile?.avatar_url} fallback={profile?.full_name ?? profile?.username ?? ''} size="sm" />
+            </Button>
             <Button variant="primary" size="sm" onClick={openNewChat} className="gap-1.5">
               <MessageCirclePlus className="h-4 w-4" />
               <span className="hidden sm:inline">Создать беседу</span>
@@ -93,16 +102,9 @@ export function ChatPage() {
             <Button variant="ghost" size="sm" onClick={openNewChat} aria-label="Поиск">
               <Search className="h-5 w-5" />
             </Button>
-            <a
-              href={`${window.location.origin}/dibil-message/`}
-              onClick={(e) => {
-                e.preventDefault()
-                handleSignOut()
-              }}
-              className="inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--color-dibil-text)] hover:bg-[var(--color-dibil-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-dibil-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-dibil-bg)]"
-            >
-              Выйти
-            </a>
+            <Button type="button" variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut}>
+              <span className="text-sm">{signingOut ? 'Выход…' : 'Выйти'}</span>
+            </Button>
           </div>
         </header>
         <main className="flex-1 overflow-hidden">
@@ -113,9 +115,9 @@ export function ChatPage() {
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
         <DialogContent className="max-h-[80vh] overflow-hidden flex flex-col">
           <DialogTitle>Найти пользователя</DialogTitle>
-          <p className="text-sm text-[var(--color-dibil-text-muted)]">
+          <DialogDescription>
             Список всех пользователей. Введите имя или @username для фильтра.
-          </p>
+          </DialogDescription>
           <div className="mt-2">
             <Input
               placeholder="Фильтр по имени или @username..."
